@@ -112,71 +112,81 @@ func makeDbConnectionString() string {
 }
 
 // MustLoad загружает конфигурацию из .env-файла и переменных окружения.
+
+// MustLoad загружает конфигурацию из .env-файла (только для разработки) и переменных окружения.
 func MustLoad() *Config {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
-	}
+    // Пытаемся загрузить .env только если файл существует (локальная разработка)
+    if _, err := os.Stat(".env"); err == nil {
+        if err := godotenv.Load(); err != nil {
+            log.Println("Warning: error loading .env file:", err)
+            // НЕ вызываем log.Fatal - просто продолжаем
+        } else {
+            log.Println("Loaded .env file for development")
+        }
+    } else {
+        log.Println("No .env file found, using environment variables")
+    }
 
-	port := readValueAsInt("APP_PORT", defaultPort)
+    port := readValueAsInt("APP_PORT", defaultPort)
 
-	appURL := readValueFromFileOrEnv("APP_URL")
-	if appURL == "" {
-		appURL = "localhost:" + strconv.Itoa(port)
-	}
+    appURL := readValueFromFileOrEnv("APP_URL")
+    if appURL == "" {
+        appURL = "localhost:" + strconv.Itoa(port)
+    }
 
-	jwtSecret := readValueFromFileOrEnv("JWT_SECRET")
-	if jwtSecret == "" {
-		jwtSecret = "default-jwt-secret-for-development"
-	}
-	frontendURL := readValueFromFileOrEnv("FRONTEND_URL")
-	if frontendURL == "" {
-		frontendURL = "http://localhost:3000"
-	}
+    jwtSecret := readValueFromFileOrEnv("JWT_SECRET")
+    if jwtSecret == "" {
+        jwtSecret = "default-jwt-secret-for-development"
+    }
+    frontendURL := readValueFromFileOrEnv("FRONTEND_URL")
+    if frontendURL == "" {
+        frontendURL = "http://localhost:3000"
+    }
 
-	return &Config{
-		AppURL:             appURL,
-		Environment:        mustReadValueFromFileOrEnv("APP_ENV"),
-		LogLevel:           readValueFromFileOrEnv("LOG_LEVEL"),
-		Port:               port,
-		DBConnectionString: makeDbConnectionString(),
-		JWTSecret:          jwtSecret,
-		OAuth: OAuthCfg{
-			Provider:     mustReadValueFromFileOrEnv("OAUTH_PROVIDER"),
-			ClientID:     mustReadValueFromFileOrEnv("OAUTH_CLIENT_ID"),
-			ClientSecret: mustReadValueFromFileOrEnv("OAUTH_CLIENT_SECRET"),
-			RedirectURL:  mustReadValueFromFileOrEnv("OAUTH_REDIRECT_URL"),
-		},
-		S3: S3Cfg{
-			Endpoint:        readValueFromFileOrEnv("S3_ENDPOINT"),
-			AccessKeyID:     readValueFromFileOrEnv("S3_ACCESS_KEY_ID"),
-			SecretAccessKey: readValueFromFileOrEnv("S3_SECRET_ACCESS_KEY"),
-			Bucket:          readValueFromFileOrEnv("S3_BUCKET"),
-			BaseURL:         readValueFromFileOrEnv("S3_BASE_URL"),
-			Region:          readValueFromFileOrEnv("S3_REGION"),
-		},
-		SMTP: MultiSMTPCfg{
-			Primary: SMTPCfg{
-				Host:     readValueFromFileOrEnv("SMTP_HOST"),
-				Port:     readValueAsInt("SMTP_PORT", 587),
-				Username: readValueFromFileOrEnv("SMTP_USERNAME"),
-				Password: readValueFromFileOrEnv("SMTP_PASSWORD"),
-				From:     readValueFromFileOrEnv("SMTP_FROM"),
-			},
-			Secondary: SMTPCfg{
-				Host:     readValueFromFileOrEnv("SMTP_HOST_2"),
-				Port:     readValueAsInt("SMTP_PORT_2", 587),
-				Username: readValueFromFileOrEnv("SMTP_USERNAME_2"),
-				Password: readValueFromFileOrEnv("SMTP_PASSWORD_2"),
-				From:     readValueFromFileOrEnv("SMTP_FROM_2"),
-			},
-			Tertiary: SMTPCfg{
-				Host:     readValueFromFileOrEnv("SMTP_HOST_3"),
-				Port:     readValueAsInt("SMTP_PORT_3", 587),
-				Username: readValueFromFileOrEnv("SMTP_USERNAME_3"),
-				Password: readValueFromFileOrEnv("SMTP_PASSWORD_3"),
-				From:     readValueFromFileOrEnv("SMTP_FROM_3"),
-			},
-		},
-		FrontendURL: frontendURL,
-	}
+    return &Config{
+        AppURL:             appURL,
+        Environment:        mustReadValueFromFileOrEnv("APP_ENV"),
+        LogLevel:           readValueFromFileOrEnv("LOG_LEVEL"),
+        Port:               port,
+        DBConnectionString: makeDbConnectionString(),
+        JWTSecret:          jwtSecret,
+        OAuth: OAuthCfg{
+            Provider:     mustReadValueFromFileOrEnv("OAUTH_PROVIDER"),
+            ClientID:     mustReadValueFromFileOrEnv("OAUTH_CLIENT_ID"),
+            ClientSecret: mustReadValueFromFileOrEnv("OAUTH_CLIENT_SECRET"),
+            RedirectURL:  mustReadValueFromFileOrEnv("OAUTH_REDIRECT_URL"),
+        },
+        S3: S3Cfg{
+            Endpoint:        readValueFromFileOrEnv("S3_ENDPOINT"),
+            AccessKeyID:     readValueFromFileOrEnv("S3_ACCESS_KEY_ID"),
+            SecretAccessKey: readValueFromFileOrEnv("S3_SECRET_ACCESS_KEY"),
+            Bucket:          readValueFromFileOrEnv("S3_BUCKET"),
+            BaseURL:         readValueFromFileOrEnv("S3_BASE_URL"),
+            Region:          readValueFromFileOrEnv("S3_REGION"),
+        },
+        SMTP: MultiSMTPCfg{
+            Primary: SMTPCfg{
+                Host:     readValueFromFileOrEnv("SMTP_HOST"),
+                Port:     readValueAsInt("SMTP_PORT", 587),
+                Username: readValueFromFileOrEnv("SMTP_USERNAME"),
+                Password: readValueFromFileOrEnv("SMTP_PASSWORD"),
+                From:     readValueFromFileOrEnv("SMTP_FROM"),
+            },
+            Secondary: SMTPCfg{
+                Host:     readValueFromFileOrEnv("SMTP_HOST_2"),
+                Port:     readValueAsInt("SMTP_PORT_2", 587),
+                Username: readValueFromFileOrEnv("SMTP_USERNAME_2"),
+                Password: readValueFromFileOrEnv("SMTP_PASSWORD_2"),
+                From:     readValueFromFileOrEnv("SMTP_FROM_2"),
+            },
+            Tertiary: SMTPCfg{
+                Host:     readValueFromFileOrEnv("SMTP_HOST_3"),
+                Port:     readValueAsInt("SMTP_PORT_3", 587),
+                Username: readValueFromFileOrEnv("SMTP_USERNAME_3"),
+                Password: readValueFromFileOrEnv("SMTP_PASSWORD_3"),
+                From:     readValueFromFileOrEnv("SMTP_FROM_3"),
+            },
+        },
+        FrontendURL: frontendURL,
+    }
 }
