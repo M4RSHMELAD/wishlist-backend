@@ -49,10 +49,20 @@ func NewRouter(
 	r.Use(chimiddleware.RealIP)
 	r.Use(chimiddleware.Logger)
 
-	// CORS для работы с frontend
+    // CORS для работы с frontend - Production готово
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+			// Production URL вашего фронтенда
+			productionURL := "https://frontend-lruy-production.up.railway.app"
+			localURL := "http://localhost:3000"
+			
+			origin := r.Header.Get("Origin")
+			
+			// Разрешаем production URL и localhost для разработки
+			if origin == productionURL || origin == localURL {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+			}
+			
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
