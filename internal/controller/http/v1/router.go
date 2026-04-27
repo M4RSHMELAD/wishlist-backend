@@ -51,32 +51,19 @@ func NewRouter(
 
 	// CORS для работы с frontend
 	r.Use(func(next http.Handler) http.Handler {
-	    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	        // Получаем разрешенные origin из конфига
-	        allowedOrigin := cfg.FrontendURL
-	        if allowedOrigin == "" {
-	            allowedOrigin = "http://localhost:3000" // fallback для разработки
-	        }
-	        
-	        // Для разработки также разрешаем localhost
-	        origin := r.Header.Get("Origin")
-	        if origin == allowedOrigin || origin == "http://localhost:3000" {
-	            w.Header().Set("Access-Control-Allow-Origin", origin)
-	        } else if allowedOrigin != "" {
-	            w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
-	        }
-	        
-	        w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
-	        w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-	        w.Header().Set("Access-Control-Allow-Credentials", "true")
-	
-	        if r.Method == "OPTIONS" {
-	            w.WriteHeader(http.StatusOK)
-	            return
-	        }
-	
-	        next.ServeHTTP(w, r)
-	    })
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
 	})
 
 	// Swagger UI
